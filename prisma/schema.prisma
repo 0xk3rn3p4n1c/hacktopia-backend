@@ -18,6 +18,7 @@ model Users {
   oneTimePassword OneTimePassword?
   TeamMembers     TeamMembers[]
   Submissions     Submission[]
+  JoinRequest     JoinRequest[]
 }
 
 model Profiles {
@@ -56,6 +57,7 @@ model Team {
   updatedAt         DateTime      @updatedAt
   teamMembers       TeamMembers[]
   submissions       Submission[]
+  JoinRequest       JoinRequest[]
 }
 
 model TeamMembers {
@@ -70,6 +72,17 @@ model TeamMembers {
   team                   Team     @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
   user                   Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
   profile                Profiles @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model JoinRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String
+  userId    String
+  status    String   @default("pending") // pending, accepted, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  team Team  @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
+  user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
 
 model Challenge {
