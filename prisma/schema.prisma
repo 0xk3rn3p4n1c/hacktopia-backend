@@ -8,14 +8,16 @@ datasource db {
 }
 
 model Users {
-  id        Int       @id @default(autoincrement())
-  userId    String    @unique @default(uuid())
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  profiles  Profiles?
-  oneTimePassword       OneTimePassword?
+  id              Int              @id @default(autoincrement())
+  userId          String           @unique @default(uuid())
+  email           String           @unique
+  password        String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  profiles        Profiles?
+  oneTimePassword OneTimePassword?
+  TeamMembers     TeamMembers[]
+  Submissions     Submission[]
 }
 
 model Profiles {
@@ -36,4 +38,79 @@ model OneTimePassword {
   updatedAt DateTime @updatedAt
   expiry    DateTime
   user      Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model Team {
+  id          Int           @id @default(autoincrement())
+  teamId      String        @unique @default(cuid())
+  teamName    String        @unique
+  teamCode    String
+  teamCaptain String
+  teamPoints  Int           @default(0)
+  teamMembers String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  TeamMembers TeamMembers[]
+  Submissions Submission[]
+}
+
+model TeamMembers {
+  id                 Int      @id @default(autoincrement())
+  teamId             String
+  userId             String
+  teamRole           String
+  memberPoints       Int      @default(0)
+  challengesAnswered String[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  team               Team     @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
+  user               Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model Challenge {
+  id          Int          @id @default(autoincrement())
+  challengeId String       @unique
+  title       String
+  description String
+  points      Int
+  categoryId  String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  category    Category     @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
+  flags       Flag[]
+  submissions Submission[]
+}
+
+model Category {
+  id         Int         @id @default(autoincrement())
+  categoryId String      @unique
+  name       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  challenges Challenge[]
+}
+
+model Flag {
+  id          Int       @id @default(autoincrement())
+  flagId      String    @unique
+  challengeId String    @unique
+  flag        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  challenge   Challenge @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
+}
+
+model Submission {
+  id           Int       @id @default(autoincrement())
+  submissionId String    @unique
+  challengeId  String
+  teamId       String
+  userId       String
+  flag         String
+  isCorrect    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  challenge    Challenge @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
+  team         Team      @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
+  user         Users     @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
