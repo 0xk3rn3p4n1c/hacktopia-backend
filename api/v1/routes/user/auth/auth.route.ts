@@ -339,6 +339,7 @@ userAuthRouter.post(
           expiry: otpExpiry,
         },
       });
+      
     }
 
     if (otpCreated) {
