@@ -20,6 +20,7 @@ import { userMiddleware } from "./api/v1/middleware/user/middleware";
 import userAuthRouter from "./api/v1/routes/user/auth/auth.route";
 import userProfileRouter from "./api/v1/routes/user/user/user.credential";
 import tokenValidRouter from "./api/v1/routes/user/auth/token.valid.route";
+import teamRouter from "./api/v1/routes/team/team.route";
 
 // Load environment variables
 dotenv.config();
@@ -116,6 +117,7 @@ app.use(
 app.use("/api/v1/auth", authRateLimiter, userAuthRouter);
 app.use("/api/v1/token", authRateLimiter, tokenValidRouter);
 app.use("/api/v1/user", limiter, userMiddleware, userProfileRouter);
+app.use("/api/v1/team", limiter, userMiddleware, teamRouter);
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -141,13 +143,11 @@ if (wlan0Interfaces) {
   const ipv4Interface = wlan0Interfaces.find((i) => i.family === "IPv4");
   if (ipv4Interface) {
     // Create HTTPS server
-    https
-      .createServer(options, app)
-      .listen(PORT as number, () => {
-        console.log(
-          `[SERVER] Secure server is running on https://${ipv4Interface.address}:${PORT}.`
-        );
-      });
+    https.createServer(options, app).listen(PORT as number, () => {
+      console.log(
+        `[SERVER] Secure server is running on https://${ipv4Interface.address}:${PORT}.`
+      );
+    });
   } else {
     console.error("No IPv4 address found for wlan0 interface.");
   }
