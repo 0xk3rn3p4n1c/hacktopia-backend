@@ -75,6 +75,7 @@ teamRouter.post(
       success: true,
       message: "Team created successfully",
       code: TEAM_CREATED,
+      teamName: teamName,
     });
   }
 );
