@@ -21,13 +21,14 @@ model Users {
 }
 
 model Profiles {
-  id                 Int      @id @default(autoincrement())
-  userId             String   @unique
-  userName           String   @unique
+  id                 Int           @id @default(autoincrement())
+  userId             String        @unique
+  userName           String        @unique
   userProfilePicture String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  user               Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  user               Users         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  TeamMembers        TeamMembers[]
 }
 
 model OneTimePassword {
@@ -47,24 +48,23 @@ model Team {
   teamCode    String
   teamCaptain String
   teamPoints  Int           @default(0)
-  teamMembers String[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  TeamMembers TeamMembers[]
-  Submissions Submission[]
+  teamMembers TeamMembers[]
+  submissions Submission[]
 }
 
 model TeamMembers {
-  id                 Int      @id @default(autoincrement())
-  teamId             String
-  userId             String
-  teamRole           String
-  memberPoints       Int      @default(0)
-  challengesAnswered String[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  team               Team     @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
-  user               Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  id                     Int      @id @default(autoincrement())
+  teamId                 String
+  userId                 String
+  userRole               String
+  userPoints             Int      @default(0)
+  userChallengesAnswered String[]
+  joinedAt               DateTime @default(now())
+  team                   Team     @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
+  user                   Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  profile                Profiles @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "TeamMembers_userId_profile_fkey")
 }
 
 model Challenge {
