@@ -52,7 +52,7 @@ passport.use(
           await prisma.profiles.create({
             data: {
               userId: user.userId,
-              userName: profile.displayName.toLowerCase().replace(/\s/g, ''),
+              userName: profile.displayName.toLowerCase().replace(/\s/g, ""),
             },
           });
         }
