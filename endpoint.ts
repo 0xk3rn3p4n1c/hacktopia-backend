@@ -14,6 +14,8 @@ import express, { Request, Response } from "express";
 import { ErrorRequestHandler } from "express";
 import passport from "passport";
 import session from "express-session";
+import { Server } from "socket.io";
+import http from "http";
 
 // Import middleware and routes
 import { userMiddleware } from "./api/v1/middleware/user/middleware";
@@ -27,7 +29,33 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
+const server = http.createServer(app); // Create HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS?.split(","), // Allow frontend origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  },
+});
+
 const PORT: number | string = process.env.PORT || 5000;
+
+// Socket.IO connection
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  // Example: Listen for a custom event
+  socket.on("sendMessage", (data) => {
+    console.log("Message received:", data);
+
+    // Broadcast the message to all connected clients
+    io.emit("newMessage", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
 
 app.use(passport.initialize());
 app.use(
@@ -154,3 +182,8 @@ if (wlan0Interfaces) {
 } else {
   console.error("wlan0 interface not found.");
 }
+
+// Start the HTTP server (for Socket.IO)
+server.listen(PORT, () => {
+  console.log(`[SERVER] HTTP server is running on http://localhost:${PORT}.`);
+});

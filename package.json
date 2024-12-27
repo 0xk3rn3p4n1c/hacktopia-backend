@@ -34,6 +34,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "prisma": "^6.0.1",
+    "socket.io": "^4.8.1",
     "spdy": "^4.0.2"
   },
   "devDependencies": {
