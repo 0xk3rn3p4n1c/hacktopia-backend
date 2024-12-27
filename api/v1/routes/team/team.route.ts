@@ -7,7 +7,9 @@ import {
   TEAM_NAME_AVAILABLE,
   TEAM_NAME_NOT_AVAILABLE,
   TEAM_NOT_CREATED,
+  TEAM_NOT_LISTED,
 } from "../../../utilts/err_code";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -25,6 +27,9 @@ teamRouter.post(
         message: "Please enter all fields",
       });
     }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedTeamCode = await bcrypt.hash(teamCode, salt);
 
     // Check if the teamCaptain has already created a team
     const teamCaptainExists = await prisma.team.findFirst({
@@ -52,14 +57,38 @@ teamRouter.post(
       return response.status(400).json({
         success: false,
         message: "Team already exists",
+        code: TEAM_NAME_NOT_AVAILABLE,
       });
     }
 
+    const teamCaptainUserId = await prisma.profiles.findUnique({
+      where: {
+        userName: teamCaptain,
+      },
+    });
+
+    if (!teamCaptainUserId) {
+      return response.status(400).json({
+        success: false,
+        message: "Team Captain not found",
+        code: TEAM_NOT_CREATED,
+      });
+    }
+
+    // Create the team
     const team = await prisma.team.create({
       data: {
-        teamCode: teamCode,
+        teamCode: hashedTeamCode,
         teamName: teamName,
         teamCaptain: teamCaptain,
+        teamMembers: {
+          create: {
+            userId: teamCaptainUserId?.userId,
+            userRole: "cpt", // Set the teamRole as CAPTAIN
+            userPoints: 0, // Default value
+            userChallengesAnswered: [], // Default value
+          },
+        },
       },
     });
 
@@ -75,7 +104,7 @@ teamRouter.post(
       success: true,
       message: "Team created successfully",
       code: TEAM_CREATED,
-      teamName: teamName,
+      team: team,
     });
   }
 );
@@ -111,6 +140,42 @@ teamRouter.get(
         code: TEAM_NAME_AVAILABLE,
       });
     }
+  }
+);
+
+teamRouter.get(
+  "/list",
+  async (request: Request, response: Response): Promise<any> => {
+    const teams = await prisma.team.findMany({
+      include: {
+        teamMembers: {
+          include: {
+            profile: {
+              select: {
+                userId: true,
+                userName: true,
+                userProfilePicture: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!teams) {
+      return response.status(400).json({
+        success: false,
+        message: "Error. Teams not found!",
+        code: TEAM_NOT_LISTED,
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      message: "Teams fetched successfully",
+      code: TEAM_CREATED,
+      teams: teams,
+    });
   }
 );
 
