@@ -15,7 +15,6 @@ import { ErrorRequestHandler } from "express";
 import passport from "passport";
 import session from "express-session";
 import { Server } from "socket.io";
-import http from "http";
 
 // Import middleware and routes
 import { userMiddleware } from "./api/v1/middleware/user/middleware";
@@ -23,14 +22,25 @@ import userAuthRouter from "./api/v1/routes/user/auth/auth.route";
 import userProfileRouter from "./api/v1/routes/user/user/user.credential";
 import tokenValidRouter from "./api/v1/routes/user/auth/token.valid.route";
 import teamRouter from "./api/v1/routes/team/team.route";
+import { SocketHandler } from "./socket-handler";
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Express app
 const app = express();
-const server = http.createServer(app); // Create HTTP server
-const io = new Server(server, {
+
+// SSL Configuration / DEVELOPMENT ONLY
+const options = {
+  key: fs.readFileSync("./ssl/private.key"),
+  cert: fs.readFileSync("./ssl/certificate.crt"),
+};
+
+// Create HTTPS server
+const httpsServer = https.createServer(options, app);
+
+// Initialize Socket.IO with the HTTPS server
+const io = new Server(httpsServer, {
   cors: {
     origin: process.env.ALLOWED_ORIGINS?.split(","), // Allow frontend origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -40,22 +50,7 @@ const io = new Server(server, {
 
 const PORT: number | string = process.env.PORT || 5000;
 
-// Socket.IO connection
-io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
-  // Example: Listen for a custom event
-  socket.on("sendMessage", (data) => {
-    console.log("Message received:", data);
-
-    // Broadcast the message to all connected clients
-    io.emit("newMessage", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
+new SocketHandler(io);
 
 app.use(passport.initialize());
 app.use(
@@ -155,12 +150,6 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 app.use(errorHandler);
 
-// SSL Configuration / DEVELOPMENT ONLY
-const options = {
-  key: fs.readFileSync("./ssl/private.key"),
-  cert: fs.readFileSync("./ssl/certificate.crt"),
-};
-
 // Get the first IPv4 address of the "wlan0" network interface: DEVELOPMENT ONLY
 const networkInterfaces = os.networkInterfaces();
 
@@ -170,8 +159,8 @@ const wlan0Interfaces = networkInterfaces["wlan0"];
 if (wlan0Interfaces) {
   const ipv4Interface = wlan0Interfaces.find((i) => i.family === "IPv4");
   if (ipv4Interface) {
-    // Create HTTPS server
-    https.createServer(options, app).listen(PORT as number, () => {
+    // Start the HTTPS server
+    httpsServer.listen(PORT as number, () => {
       console.log(
         `[SERVER] Secure server is running on https://${ipv4Interface.address}:${PORT}.`
       );
@@ -182,8 +171,3 @@ if (wlan0Interfaces) {
 } else {
   console.error("wlan0 interface not found.");
 }
-
-// Start the HTTP server (for Socket.IO)
-server.listen(PORT, () => {
-  console.log(`[SERVER] HTTP server is running on http://localhost:${PORT}.`);
-});
