@@ -22,22 +22,22 @@ import userAuthRouter from "./api/v1/routes/user/auth/auth.route";
 import userProfileRouter from "./api/v1/routes/user/user/user.credential";
 import tokenValidRouter from "./api/v1/routes/user/auth/token.valid.route";
 import teamRouter from "./api/v1/routes/team/team.route";
-import { SocketHandler } from "./socket-handler";
+import { authRateLimiter, limiter } from "./limiter";
 
 // Load environment variables
 dotenv.config();
-
 // Initialize Express app
 const app = express();
-
-// SSL Configuration / DEVELOPMENT ONLY
-const options = {
-  key: fs.readFileSync("./ssl/private.key"),
-  cert: fs.readFileSync("./ssl/certificate.crt"),
-};
+const PORT: number | string = process.env.PORT || 5000;
 
 // Create HTTPS server
-const httpsServer = https.createServer(options, app);
+const httpsServer = https.createServer(
+  {
+    key: fs.readFileSync("./ssl/private.key"),
+    cert: fs.readFileSync("./ssl/certificate.crt"),
+  },
+  app
+);
 
 // Initialize Socket.IO with the HTTPS server
 const io = new Server(httpsServer, {
@@ -47,10 +47,6 @@ const io = new Server(httpsServer, {
     credentials: true,
   },
 });
-
-const PORT: number | string = process.env.PORT || 5000;
-
-new SocketHandler(io);
 
 app.use(passport.initialize());
 app.use(
@@ -112,20 +108,6 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50000,
-  message: "Too many requests from this IP, please try again after 15 minutes",
-});
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50000,
-  message: "Too many requests from this IP, please try again after 15 minutes",
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 app.use(limiter);
 // Health check endpoint
 app.get("/health", (req: Request, res: Response) => {
@@ -142,6 +124,14 @@ app.use("/api/v1/token", authRateLimiter, tokenValidRouter);
 app.use("/api/v1/user", limiter, userMiddleware, userProfileRouter);
 app.use("/api/v1/team", limiter, userMiddleware, teamRouter);
 
+// Socket Listeners
+
+io.on("connection", (socket) => {
+  socket.on("allTeams", () => {
+    io.emit("allTeams");
+  });
+});
+
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   console.error(err.stack);
@@ -149,25 +139,9 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 };
 
 app.use(errorHandler);
-
-// Get the first IPv4 address of the "wlan0" network interface: DEVELOPMENT ONLY
-const networkInterfaces = os.networkInterfaces();
-
-// DEVELOPMENT ONLY
-const wlan0Interfaces = networkInterfaces["wlan0"];
-
-if (wlan0Interfaces) {
-  const ipv4Interface = wlan0Interfaces.find((i) => i.family === "IPv4");
-  if (ipv4Interface) {
-    // Start the HTTPS server
-    httpsServer.listen(PORT as number, () => {
-      console.log(
-        `[SERVER] Secure server is running on https://${ipv4Interface.address}:${PORT}.`
-      );
-    });
-  } else {
-    console.error("No IPv4 address found for wlan0 interface.");
-  }
-} else {
-  console.error("wlan0 interface not found.");
-}
+// Start the HTTPS server
+httpsServer.listen(PORT as number, () => {
+  console.log(
+    `[SERVER] Secure server is running on https://localhost:${PORT}.`
+  );
+});
