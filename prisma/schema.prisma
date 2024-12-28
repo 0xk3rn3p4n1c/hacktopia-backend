@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model Users {
-  id              Int              @id @default(autoincrement())
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
   userId          String           @unique @default(uuid())
   email           String           @unique
   password        String
@@ -21,7 +21,7 @@ model Users {
 }
 
 model Profiles {
-  id                 Int           @id @default(autoincrement())
+  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
   userId             String        @unique
   userName           String        @unique
   userProfilePicture String?
@@ -32,7 +32,7 @@ model Profiles {
 }
 
 model OneTimePassword {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @unique
   otp       String
   createdAt DateTime @default(now())
@@ -42,11 +42,13 @@ model OneTimePassword {
 }
 
 model Team {
-  id          Int           @id @default(autoincrement())
-  teamId      String        @unique @default(cuid())
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  teamId      String        @unique @default(uuid())
   teamName    String        @unique
   teamCode    String
   teamCaptain String
+  teamMotto   String
+  teamCountry String
   teamPoints  Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -55,7 +57,7 @@ model Team {
 }
 
 model TeamMembers {
-  id                     Int      @id @default(autoincrement())
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
   teamId                 String
   userId                 String
   userRole               String
@@ -64,11 +66,11 @@ model TeamMembers {
   joinedAt               DateTime @default(now())
   team                   Team     @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
   user                   Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  profile                Profiles @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "TeamMembers_userId_profile_fkey")
+  profile                Profiles @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
 
 model Challenge {
-  id          Int          @id @default(autoincrement())
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
   challengeId String       @unique
   title       String
   description String
@@ -82,7 +84,7 @@ model Challenge {
 }
 
 model Category {
-  id         Int         @id @default(autoincrement())
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
   categoryId String      @unique
   name       String
   createdAt  DateTime    @default(now())
@@ -91,7 +93,7 @@ model Category {
 }
 
 model Flag {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   flagId      String    @unique
   challengeId String    @unique
   flag        String    @unique
@@ -101,7 +103,7 @@ model Flag {
 }
 
 model Submission {
-  id           Int       @id @default(autoincrement())
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
   submissionId String    @unique
   challengeId  String
   teamId       String
