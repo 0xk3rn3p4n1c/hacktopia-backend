@@ -4,9 +4,11 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import {
   TEAM_CREATED,
+  TEAM_DETAILS_FETCHED,
   TEAM_NAME_AVAILABLE,
   TEAM_NAME_NOT_AVAILABLE,
   TEAM_NOT_CREATED,
+  TEAM_NOT_FOUND,
   TEAM_NOT_LISTED,
 } from "../../../utilts/err_code";
 import bcrypt from "bcryptjs";
@@ -19,9 +21,9 @@ const prisma = new PrismaClient();
 teamRouter.post(
   "/create",
   async (request: Request, response: Response): Promise<any> => {
-    const { teamName, teamCode, teamCaptain } = request.body;
+    const { teamName, teamCode, teamCaptain, teamMotto, teamCountry } = request.body;
 
-    if (!teamName || !teamCode) {
+    if (!teamName || !teamCode || !teamCaptain || !teamMotto || !teamCountry) {
       return response.status(400).json({
         success: false,
         message: "Please enter all fields",
@@ -81,6 +83,8 @@ teamRouter.post(
         teamCode: hashedTeamCode,
         teamName: teamName,
         teamCaptain: teamCaptain,
+        teamMotto: teamMotto,
+        teamCountry: teamCountry,
         teamMembers: {
           create: {
             userId: teamCaptainUserId?.userId,
@@ -175,6 +179,54 @@ teamRouter.get(
       message: "Teams fetched successfully",
       code: TEAM_CREATED,
       teams: teams,
+    });
+  }
+);
+
+teamRouter.get(
+  "/teamDetails",
+  async (request: Request, response: Response): Promise<any> => {
+    const { teamId } = request.query;
+
+    if (!teamId) {
+      return response.status(400).json({
+        success: false,
+        message: "Please enter all fields",
+      });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: {
+        teamId: teamId as string,
+      },
+      include: {
+        teamMembers: {
+          include: {
+            profile: {
+              select: {
+                userId: true,
+                userName: true,
+                userProfilePicture: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      return response.status(400).json({
+        success: false,
+        message: "Error. Team not found!",
+        code: TEAM_DETAILS_FETCHED,
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      message: "Team fetched successfully",
+      code: TEAM_DETAILS_FETCHED,
+      team: team,
     });
   }
 );
