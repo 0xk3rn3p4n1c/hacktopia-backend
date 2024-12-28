@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import {
   TEAM_CREATED,
   TEAM_DETAILS_FETCHED,
+  TEAM_LISTED,
   TEAM_NAME_AVAILABLE,
   TEAM_NAME_NOT_AVAILABLE,
   TEAM_NOT_CREATED,
@@ -21,17 +22,14 @@ const prisma = new PrismaClient();
 teamRouter.post(
   "/create",
   async (request: Request, response: Response): Promise<any> => {
-    const { teamName, teamCode, teamCaptain, teamMotto, teamCountry } = request.body;
+    const { teamName, teamCaptain, teamMotto, teamCountry } = request.body;
 
-    if (!teamName || !teamCode || !teamCaptain || !teamMotto || !teamCountry) {
+    if (!teamName || !teamCaptain || !teamMotto || !teamCountry) {
       return response.status(400).json({
         success: false,
         message: "Please enter all fields",
       });
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedTeamCode = await bcrypt.hash(teamCode, salt);
 
     // Check if the teamCaptain has already created a team
     const teamCaptainExists = await prisma.team.findFirst({
@@ -80,7 +78,6 @@ teamRouter.post(
     // Create the team
     const team = await prisma.team.create({
       data: {
-        teamCode: hashedTeamCode,
         teamName: teamName,
         teamCaptain: teamCaptain,
         teamMotto: teamMotto,
@@ -177,7 +174,7 @@ teamRouter.get(
     return response.status(200).json({
       success: true,
       message: "Teams fetched successfully",
-      code: TEAM_CREATED,
+      code: TEAM_LISTED,
       teams: teams,
     });
   }
