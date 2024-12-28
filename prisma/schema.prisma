@@ -25,6 +25,7 @@ model Profiles {
   userId             String        @unique
   userName           String        @unique
   userProfilePicture String?
+  userRanking        userRanking   @default(unranked)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   user               Users         @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -42,18 +43,19 @@ model OneTimePassword {
 }
 
 model Team {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  teamId      String        @unique @default(uuid())
-  teamName    String        @unique
-  teamCode    String
-  teamCaptain String
-  teamMotto   String
-  teamCountry String
-  teamPoints  Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  teamMembers TeamMembers[]
-  submissions Submission[]
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  teamId            String        @unique @default(uuid())
+  teamName          String        @unique
+  teamCaptain       String
+  teamMotto         String
+  teamCountry       String
+  teamPoints        Int           @default(0)
+  teamRanking       teamRanking   @default(unranked)
+  teamCapturedFlags Int           @default(0)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  teamMembers       TeamMembers[]
+  submissions       Submission[]
 }
 
 model TeamMembers {
@@ -63,6 +65,7 @@ model TeamMembers {
   userRole               String
   userPoints             Int      @default(0)
   userChallengesAnswered String[]
+  userCapturedFlags      Int      @default(0)
   joinedAt               DateTime @default(now())
   team                   Team     @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
   user                   Users    @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -115,4 +118,29 @@ model Submission {
   challenge    Challenge @relation(fields: [challengeId], references: [challengeId], onDelete: Cascade)
   team         Team      @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
   user         Users     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+enum teamRanking {
+  unranked // < 500
+  script_kiddies // 2500
+  flag_hunters // 5000
+  exploit_engineers // 10000
+  shell_seekers // 30000
+  flag_masters // 35000
+  zero_day_zealots // 45000
+  ctf_legends // 50000
+  ctf_grandmasters // 75000
+  ctf_immortal_experts // 100000
+  ctf_god // 200000
+}
+
+enum userRanking {
+  unranked // < 500
+  code_novice // 2500
+  shell_scout // 5000
+  binary_builder // 10000
+  exploit_artisan // 30000
+  root_ranger // 35000
+  cyber_gladiator // 45000
+  ctf_phoenix // 50000
 }
