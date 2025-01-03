@@ -85,6 +85,18 @@ model JoinRequest {
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
 
+model CTFEvent {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  eventId      String      @unique @default(uuid())
+  eventName    String      @unique
+  description  String
+  startDate    DateTime
+  endDate      DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  challenges   Challenge[] // Relationship to the Challenge model
+}
+
 model Challenge {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   challengeId String       @unique
@@ -92,11 +104,13 @@ model Challenge {
   description String
   points      Int
   categoryId  String
+  ctfEventId  String?      // Optional foreign key to link the challenge to a CTF event
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   category    Category     @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
   flags       Flag[]
   submissions Submission[]
+  ctfEvent    CTFEvent?    @relation(fields: [ctfEventId], references: [eventId], onDelete: Cascade) // Optional relation to CTFEvent
 }
 
 model Category {
