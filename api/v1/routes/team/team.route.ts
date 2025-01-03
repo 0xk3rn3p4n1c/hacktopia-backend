@@ -466,6 +466,17 @@ teamRouter.get(
       },
       include: {
         team: true,
+        user: {
+          select: {
+            profiles: {
+              select: {
+                userName: true,
+                userId: true,
+                userProfilePicture: true,
+              },
+            },
+          },
+        },
       },
     });
 
