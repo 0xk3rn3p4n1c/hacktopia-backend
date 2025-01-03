@@ -214,7 +214,7 @@ teamRouter.post(
     const teamCaptain = await prisma.teamMembers.findFirst({
       where: {
         userId: teamCaptainUserId,
-        userRole: "cpt",
+        userRole: "cpt", // Assuming 'cpt' is the role for team captain
       },
     });
 
@@ -241,16 +241,6 @@ teamRouter.post(
       });
     }
 
-    // Update the join request status to 'accepted'
-    const updatedRequest = await prisma.joinRequest.update({
-      where: {
-        id: requestId,
-      },
-      data: {
-        status: "accepted",
-      },
-    });
-
     // Add the user to the team
     const teamMember = await prisma.teamMembers.create({
       data: {
@@ -270,9 +260,16 @@ teamRouter.post(
       });
     }
 
+    // Delete the join request after adding the user to the team
+    await prisma.joinRequest.delete({
+      where: {
+        id: requestId,
+      },
+    });
+
     return response.status(200).json({
       success: true,
-      message: "Join request accepted successfully",
+      message: "Join request accepted and user added to the team successfully",
       code: JOIN_REQUEST_ACCEPTED,
       teamMember: teamMember,
     });
