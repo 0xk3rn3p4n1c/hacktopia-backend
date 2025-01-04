@@ -66,8 +66,11 @@ app.use(
   userMiddleware,
   express.static(path.join(__dirname, "./api/v1/uploads/users/profiles"))
 );
+
+// Refactored!!!
 app.use("/api/v1/auth", userAuthRouter);
 app.use("/api/v1/team", teamRouter);
+
 app.use("/api/v1/token", authRateLimiter, tokenValidRouter);
 app.use("/api/v1/user", limiter, userMiddleware, userProfileRouter);
 
