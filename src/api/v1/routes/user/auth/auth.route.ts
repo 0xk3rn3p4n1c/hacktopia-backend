@@ -24,7 +24,7 @@ import {
   USERNAME_ALREADY_EXISTS,
 } from "../../../../../utils/err_code";
 import passport from "passport";
-import "../../strategies/google";
+import "../../../../../strategies/google";
 import { sendEmail } from "../../../../../utils/mailer";
 
 dotenv.config();
