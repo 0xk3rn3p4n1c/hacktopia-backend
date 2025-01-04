@@ -3,3 +3,7 @@ export interface UserInterface {
   email: string;
   password: string;
 }
+
+export interface GoogleAuthInterface extends Request {
+  user: any;
+}
