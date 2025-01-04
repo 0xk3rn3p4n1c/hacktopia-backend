@@ -36,3 +36,5 @@ export const upload = multer({
     fileSize: 1024 * 1024 * 10, // Limit file size to 10MB
   },
 });
+
+export const PORT: number | string = process.env.PORT || 5000;

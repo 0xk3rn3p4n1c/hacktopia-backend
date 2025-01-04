@@ -36,13 +36,10 @@ import checkTeamRouter from "./src/api/v1/routes/team/check-team.route";
 import acceptTeamRouter from "./src/api/v1/routes/team/accept.route";
 import teamDetailsRouter from "./src/api/v1/routes/team/teamdetails.route";
 import { app, httpsServer } from "./src/config/server";
+import { PORT } from "./src/utils/utils";
 
 // Load environment variables
 dotenv.config();
-// Initialize Express app
-
-const PORT: number | string = process.env.PORT || 5000;
-
 // Initialize Socket.IO with the HTTPS server
 export const io = new Server(httpsServer, {
   cors: {
@@ -71,10 +68,11 @@ app.use(errorHandler);
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "OK" });
 });
+
 app.use(
-  "/uploads",
+  "/uploads/users/profiles",
   userMiddleware,
-  express.static(path.join(__dirname, "./api/v1/uploads"))
+  express.static(path.join(__dirname, "./api/v1/uploads/users/profiles"))
 );
 app.use("/api/v1/auth", authRateLimiter, userAuthRouter);
 app.use("/api/v1/token", authRateLimiter, tokenValidRouter);
