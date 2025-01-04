@@ -26,17 +26,9 @@ import userAuthRouter from "./src/api/v1/routes/user/auth/auth.route";
 import tokenValidRouter from "./src/api/v1/routes/user/auth/token.valid.route";
 import userProfileRouter from "./src/api/v1/routes/user/user/user.credential";
 
-// Import team routes
-import createTeamRouter from "./src/api/v1/routes/team/create.route";
-import joinTeamRouter from "./src/api/v1/routes/team/join.route";
-import listsTeamRouter from "./src/api/v1/routes/team/lists.route";
-import myTeamRouter from "./src/api/v1/routes/team/my-team.route";
-import rejectTeamRouter from "./src/api/v1/routes/team/reject.route";
-import checkTeamRouter from "./src/api/v1/routes/team/check-team.route";
-import acceptTeamRouter from "./src/api/v1/routes/team/accept.route";
-import teamDetailsRouter from "./src/api/v1/routes/team/teamdetails.route";
 import { app, httpsServer } from "./src/config/server";
 import { PORT } from "./src/utils/utils";
+import teamRouter from "./src/api/v1/routes/team/team.route";
 
 // Load environment variables
 dotenv.config();
@@ -77,15 +69,7 @@ app.use(
 app.use("/api/v1/auth", authRateLimiter, userAuthRouter);
 app.use("/api/v1/token", authRateLimiter, tokenValidRouter);
 app.use("/api/v1/user", limiter, userMiddleware, userProfileRouter);
-
-app.use("/api/v1/team/create", limiter, userMiddleware, createTeamRouter);
-app.use("/api/v1/team/join", limiter, userMiddleware, joinTeamRouter);
-app.use("/api/v1/team/accept", limiter, userMiddleware, acceptTeamRouter);
-app.use("/api/v1/team/reject", limiter, userMiddleware, rejectTeamRouter);
-app.use("/api/v1/team/list", limiter, userMiddleware, listsTeamRouter);
-app.use("/api/v1/team/my-team", limiter, userMiddleware, myTeamRouter);
-app.use("/api/v1/team/check-team", limiter, userMiddleware, checkTeamRouter);
-app.use("/api/v1/team/details", limiter, userMiddleware, teamDetailsRouter);
+app.use("/api/v1/team", teamRouter);
 
 setupTeamSocket(io);
 
